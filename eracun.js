@@ -195,6 +195,7 @@ var vrniRacune = function(callback) {
   );
 }
 
+var prijavljen = 0;
 // Registracija novega uporabnika
 streznik.post('/prijava', function(zahteva, odgovor) {
   var form = new formidable.IncomingForm();
@@ -211,22 +212,43 @@ streznik.post('/prijava', function(zahteva, odgovor) {
       //TODO: add fields and finalize
       //stmt.run("", "", "", "", "", "", "", "", "", "", "", 3); 
       //stmt.finalize();
+        stmt.run(polja.FirstName, polja.LastName, polja.Company, polja.Address, polja.City, polja.State, polja.Country, polja.PostalCode, polja.Phone, polja.Fax, polja.Email, 3); 
+        stmt.finalize();
+        prijavljen = 1;
     } catch (err) {
       napaka2 = true;
+      prijavljen = 2;
     }
-  
-    odgovor.end();
+    odgovor.redirect('/prijava');
   });
 })
 
+
 // Prikaz strani za prijavo
-streznik.get('/prijava', function(zahteva, odgovor) {
-  vrniStranke(function(napaka1, stranke) {
-      vrniRacune(function(napaka2, racuni) {
-        odgovor.render('prijava', {sporocilo: "", seznamStrank: stranke, seznamRacunov: racuni});  
-      }) 
-    });
-})
+ streznik.get('/prijava', function(zahteva, odgovor) {
+   vrniStranke(function(napaka1, stranke) {
+       vrniRacune(function(napaka2, racuni) {
+        
+        if (prijavljen == 0) {
+          
+          odgovor.render('prijava', {sporocilo: "", seznamStrank: stranke, seznamRacunov: racuni});
+        }
+        else {
+          
+          if (prijavljen == 2) {
+          
+            odgovor.render('prijava', {sporocilo: "Prišlo je do napake pri registraciji nove stranke. Prosim preverite vnešene podatke in poskusite znova.", seznamStrank: stranke, seznamRacunov: racuni});
+            prijavljen = 0;
+          }
+          else {
+          
+            odgovor.render('prijava', {sporocilo: "Stranka je bila uspešno registrirana.", seznamStrank: stranke, seznamRacunov: racuni});
+            prijavljen = 0;
+          }
+        }
+       }) 
+     });
+ })
 
 // Prikaz nakupovalne košarice za stranko
 streznik.post('/stranka', function(zahteva, odgovor) {
